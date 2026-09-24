@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b63f6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>STOCK POS</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <div class="brand">STOCK</div>
+    <div class="sub">Cafetería / Colmado</div>
+  </div>
+  <button class="ghost" onclick="showScreen('dashboard')">Inicio</button>
+</header>
+
+<main id="app">
+  <section id="dashboard" class="screen active">
+    <h1>Resumen</h1>
+    <div class="cards">
+      <div class="card"><span>Ventas</span><b id="dashSales">RD$0</b></div>
+      <div class="card"><span>Compras</span><b id="dashPurchases">RD$0</b></div>
+      <div class="card"><span>Gastos</span><b id="dashExpenses">RD$0</b></div>
+      <div class="card"><span>Caja</span><b id="dashCash">RD$0</b></div>
+    </div>
+    <div class="menu-grid">
+      <button onclick="showScreen('sale')">🛒 Nueva venta</button>
+      <button onclick="showScreen('purchase')">📦 Registrar compra</button>
+      <button onclick="showScreen('inventory')">📋 Inventario</button>
+      <button onclick="showScreen('adjustment')">➕➖ Agregar / eliminar</button>
+      <button onclick="showScreen('expense')">💸 Gastos</button>
+      <button onclick="showScreen('cash')">💰 Caja</button>
+      <button onclick="showScreen('reports')">📊 Ganancias</button>
+      <button onclick="showScreen('history')">🧾 Movimientos</button>
+    </div>
+  </section>
+
+  <section id="sale" class="screen">
+    <h1>Nueva venta</h1>
+    <div class="form">
+      <label>Producto<select id="saleProduct"></select></label>
+      <label>Cantidad<input id="saleQty" type="number" min="1" value="1"></label>
+      <div class="info" id="saleInfo"></div>
+      <button class="primary" onclick="registerSale()">Registrar venta</button>
+    </div>
+  </section>
+
+  <section id="purchase" class="screen">
+    <h1>Registrar compra</h1>
+    <div class="form">
+      <label>Producto<select id="purchaseProduct"></select></label>
+      <label>Fardos / paquetes<input id="purchasePackages" type="number" min="1" value="1"></label>
+      <label>Unidades por fardo<input id="purchaseUnitsPerPackage" type="number" min="1" value="1"></label>
+      <label>Costo por fardo / paquete (RD$)<input id="purchaseCost" type="number" min="0" step="0.01"></label>
+      <div class="info" id="purchaseInfo"></div>
+      <button class="primary" onclick="registerPurchase()">Registrar compra</button>
+    </div>
+  </section>
+
+  <section id="products" class="screen">
+    <h1>Productos</h1>
+    <div id="productList" class="list"></div>
+    <button class="primary" onclick="openProductForm()">+ Registrar producto</button>
+  </section>
+
+  <section id="productForm" class="screen">
+    <h1 id="productFormTitle">Registrar producto</h1>
+    <div class="form">
+      <input id="editingProductId" type="hidden">
+      <label>Nombre<input id="productName" type="text" placeholder="Ej. Agua"></label>
+      <label>Precio de venta por unidad (RD$)<input id="productPrice" type="number" min="0" step="0.01"></label>
+      <label>Costo por unidad (RD$)<input id="productCost" type="number" min="0" step="0.01"></label>
+      <button class="primary" onclick="saveProduct()">Guardar producto</button>
+      <button class="secondary" onclick="showScreen('products')">Cancelar</button>
+    </div>
+  </section>
+
+  <section id="inventory" class="screen">
+    <h1>Inventario</h1>
+    <p class="hint">Aquí puedes consultar existencias. Para corregir cantidades sin crear compra o venta usa <b>Agregar / eliminar stock</b>.</p>
+    <div id="inventoryList" class="list"></div>
+    <button class="primary" onclick="showScreen('adjustment')">➕➖ Agregar / eliminar stock</button>
+  </section>
+
+  <section id="adjustment" class="screen">
+    <h1>Agregar / eliminar stock</h1>
+    <p class="hint">Este ajuste cambia solamente el inventario. <b>No afecta la caja, las compras, las ventas ni las ganancias.</b></p>
+    <div class="form">
+      <label>Producto<select id="adjustProduct" onchange="updateAdjustmentInfo()"></select></label>
+      <label>Acción
+        <select id="adjustType" onchange="updateAdjustmentInfo()">
+          <option value="add">➕ Agregar stock</option>
+          <option value="remove">➖ Eliminar stock</option>
+        </select>
+      </label>
+      <label>Cantidad<input id="adjustQty" type="number" min="1" value="1" oninput="updateAdjustmentInfo()"></label>
+      <div class="info" id="adjustInfo"></div>
+      <button class="primary" onclick="registerAdjustment()">Guardar ajuste</button>
+    </div>
+  </section>
+
+  <section id="cash" class="screen">
+    <h1>Caja</h1>
+    <div class="form">
+      <label>Dinero inicial de la caja (RD$)<input id="openingCash" type="number" min="0" step="0.01"></label>
+      <button class="primary" onclick="saveOpeningCash()">Guardar dinero inicial</button>
+    </div>
+    <div class="big-number" id="cashCurrent">RD$0</div>
+  </section>
+
+  <section id="expense" class="screen">
+    <h1>Registrar gasto</h1>
+    <div class="form">
+      <label>Descripción<input id="expenseDescription" type="text" placeholder="Ej. Gas"></label>
+      <label>Monto (RD$)<input id="expenseAmount" type="number" min="0" step="0.01"></label>
+      <button class="primary" onclick="registerExpense()">Registrar gasto</button>
+    </div>
+  </section>
+
+  <section id="reports" class="screen">
+    <h1>Ganancias</h1>
+    <div class="cards">
+      <div class="card"><span>Ventas</span><b id="repSales">RD$0</b></div>
+      <div class="card"><span>Costo vendido</span><b id="repCOGS">RD$0</b></div>
+      <div class="card"><span>Gastos</span><b id="repExpenses">RD$0</b></div>
+      <div class="card"><span>Ganancia neta</span><b id="repProfit">RD$0</b></div>
+    </div>
+  </section>
+
+  <section id="history" class="screen">
+    <h1>Movimientos</h1>
+    <div id="historyList" class="list"></div>
+  </section>
+</main>
+
+<nav class="bottom-nav">
+  <button onclick="showScreen('dashboard')">🏠<span>Inicio</span></button>
+  <button onclick="showScreen('sale')">🛒<span>Venta</span></button>
+  <button onclick="showScreen('inventory')">📦<span>Inventario</span></button>
+  <button onclick="showScreen('cash')">💰<span>Caja</span></button>
+  <button onclick="showScreen('products')">⚙️<span>Productos</span></button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>
